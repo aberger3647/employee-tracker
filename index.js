@@ -139,40 +139,49 @@ const addRole = () => {
 };
 
 const addEmployee = () => {
-  const addEmployeeInput = [
-    {
-      type: "input",
-      name: "firstName",
-      message: "What is the employee's first name?",
-    },
-    {
-      type: "input",
-      name: "lastName",
-      message: "What is the employee's last name?",
-    },
-    {
-      type: "input",
-      name: "role",
-      message: "What is the employee's role?",
-    },
-    {
-      type: "input",
-      name: "manager",
-      message: "Who is the employee's manager?",
-    },
-  ];
-
-  inquirer.prompt(addEmployeeInput).then((answers) => {
-    db.query(
-      "INSERT INTO employees (first_name, last_name, role, manager) VALUES (?, ?, ?, ?)",
-      [answers.firstName, answers.lastName, answers.role, answers.manager],
-      (err, results) => {
-        if (err) {
-          throw err;
-        }
-        console.log(`Added ${answers.firstName} ${answers.lastName} to database`);
-        mainMenu();
-        )
-    }
+    // const fullName = db.query("SELECT CONCAT_WS(' ', first_name, last_name) AS full_name FROM employees");
+    // console.log(fullName);
+    const managers = db.query("SELECT first_name AS name, manager_id AS value FROM employees WHERE manager_id IS NOT NULL", (err, managers) => {
+    console.log(managers);
+        if (err) throw err;
+    const addEmployeeInput = [
+      {
+        type: "input",
+        name: "firstName",
+        message: "What is the employee's first name?",
+      },
+      {
+        type: "input",
+        name: "lastName",
+        message: "What is the employee's last name?",
+      },
+      {
+        type: "input",
+        name: "role",
+        message: "What is the employee's role?",
+      },
+      {
+        type: "list",
+        name: "manager",
+        message: "Who is the employee's manager?",
+        choices: managers,
+      },
+    ];
+  
+    inquirer.prompt(addEmployeeInput).then((answers) => {
+    //   console.log(answers);
+    // role_id in employees table = id in roles table
+    // need title in roles table
+    // join the tables 
+    db.query("SELECT roles.id, title.id, employees.first_name, employees.last_name FROM employees INNER JOIN employees ON roles.id=employees.role_id; INSERT INTO employees (first_name, last_name, title, managers) VALUES (?, ?, ?, ?)",
+    [answers.firstName, answers.lastName, answers.role, answers.manager],
+    (err, data) => {
+      if (err) throw err;
+            console.log(`Added ${answers.firstName} ${answers.lastName} to database`);
+            mainMenu();
+          }
+        );
+      });
+    })
 }
 mainMenu();
