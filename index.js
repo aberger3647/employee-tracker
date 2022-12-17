@@ -1,6 +1,6 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
-require("console.table");
+// require("console.table");
 require("dotenv").config();
 
 const db = mysql.createConnection(
@@ -59,20 +59,24 @@ function mainMenu() {
 }
 
 function viewAllDepartments() {
-  db.query("SELECT * FROM departments", (err, results) =>
-    console.table(results)
-  );
+  db.query("SELECT * FROM departments", (err, results) => {
+    console.table(results);
   mainMenu();
+  })
 }
 
 function viewAllRoles() {
-  db.query("SELECT * FROM roles", (err, results) => console.table(results));
+  db.query("SELECT * FROM roles", (err, results) => {
+    console.table(results);
   mainMenu();
+  })
 }
 
 function viewAllEmployees() {
-  db.query("SELECT * FROM employees", (err, results) => console.table(results));
+  db.query("SELECT * FROM employees", (err, results) => {
+    console.table(results);
   mainMenu();
+})
 }
 
 function addDepartment() {
@@ -99,89 +103,119 @@ function addDepartment() {
 }
 
 const addRole = () => {
-
-  db.query("SELECT dept_name AS name, id AS value FROM departments", (err, depts) => {
-    if (err) throw err;
-    const addRoleInput = [
-      {
-        type: "input",
-        name: "role",
-        message: "What is the name of the role?",
-      },
-      {
-        type: "input",
-        name: "salary",
-        message: "What is the salary of the role?",
-      },
-      {
-        type: "list",
-        name: "roledept",
-        message: "What department does the role belong to?",
-        choices: depts,
-      }
-    ];
-
-    inquirer.prompt(addRoleInput).then((answers) => {
-        console.log(answers);
-      db.query(
-        "INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)",
-       [answers.role, answers.salary, answers.roledept],
-        (err, results) => {
-          if (err) {
-            throw err;
-          }
-          console.log(`Added ${answers.role} role to database`);
-          mainMenu();
-        }
-      );
-    });
-  });
-};
-
-const addEmployee = () => {
-    // const fullName = db.query("SELECT CONCAT_WS(' ', first_name, last_name) AS full_name FROM employees");
-    // console.log(fullName);
-    const managers = db.query("SELECT first_name AS name, manager_id AS value FROM employees WHERE manager_id IS NOT NULL", (err, managers) => {
-    console.log(managers);
-        if (err) throw err;
-    const addEmployeeInput = [
-      {
-        type: "input",
-        name: "firstName",
-        message: "What is the employee's first name?",
-      },
-      {
-        type: "input",
-        name: "lastName",
-        message: "What is the employee's last name?",
-      },
-      {
-        type: "input",
-        name: "role",
-        message: "What is the employee's role?",
-      },
-      {
-        type: "list",
-        name: "manager",
-        message: "Who is the employee's manager?",
-        choices: managers,
-      },
-    ];
-  
-    inquirer.prompt(addEmployeeInput).then((answers) => {
-    //   console.log(answers);
-    // role_id in employees table = id in roles table
-    // need title in roles table
-    // join the tables 
-    db.query("SELECT roles.id, title.id, employees.first_name, employees.last_name FROM employees INNER JOIN employees ON roles.id=employees.role_id; INSERT INTO employees (first_name, last_name, title, managers) VALUES (?, ?, ?, ?)",
-    [answers.firstName, answers.lastName, answers.role, answers.manager],
-    (err, data) => {
+  db.query(
+    "SELECT dept_name AS name, id AS value FROM departments",
+    (err, depts) => {
       if (err) throw err;
-            console.log(`Added ${answers.firstName} ${answers.lastName} to database`);
+      const addRoleInput = [
+        {
+          type: "input",
+          name: "role",
+          message: "What is the name of the role?",
+        },
+        {
+          type: "input",
+          name: "salary",
+          message: "What is the salary of the role?",
+        },
+        {
+          type: "list",
+          name: "roledept",
+          message: "What department does the role belong to?",
+          choices: depts,
+        },
+      ];
+
+      inquirer.prompt(addRoleInput).then((answers) => {
+        db.query(
+          "INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)",
+          [answers.role, answers.salary, answers.roledept],
+          (err, results) => {
+            if (err) {
+              throw err;
+            }
+            console.log(`Added ${answers.role} role to database`);
             mainMenu();
           }
         );
       });
-    })
-}
+    }
+  );
+};
+
+const addEmployee = async () => {
+  const [managers] = await db
+    .promise()
+    .query("SELECT CONCAT (first_name, ' ', last_name) AS name, id AS value FROM employees");
+  const [roles] = await db
+    .promise()
+    .query("SELECT title AS name, id AS value FROM roles");
+  const addEmployeeInput = [
+    {
+      type: "input",
+      name: "first_name",
+      message: "What is the employee's first name?",
+    },
+    {
+      type: "input",
+      name: "last_name",
+      message: "What is the employee's last name?",
+    },
+    {
+      type: "list",
+      name: "role_id",
+      message: "What is the employee's role?",
+      choices: roles,
+    },
+    {
+      type: "list",
+      name: "manager_id",
+      message: "Who is the employee's manager?",
+      choices: managers,
+    },
+  ];
+
+  inquirer.prompt(addEmployeeInput).then(async (answers) => {
+    const data = await db
+      .promise()
+      .query("INSERT INTO employees SET ?", answers);
+      console.log(`Added ${answers.first_name} ${answers.last_name} to database`)
+      mainMenu();
+  });
+};
+
+const updateRole = async () => {
+  const [employees] = await db
+  .promise()
+  .query("SELECT CONCAT(first_name, ' ', last_name) AS value, id AS name FROM employees");
+  const [roles] = await db
+    .promise()
+    .query("SELECT title AS name, id AS value FROM roles");
+    
+      const addRoleInput = [
+        {
+          type: "list",
+          name: "employee",
+          message: "Select an employee to update:",
+          choices: employees,
+        },
+        {
+          type: "list",
+          name: "role",
+          message: "Select new role for employee:",
+          choices: roles,
+        },
+      ];
+
+      inquirer.prompt(addRoleInput).then(async (answers) => {
+        const data = await db
+        .promise()
+        .query(
+          "UPDATE employees SET role_id = ? WHERE id = ?", [answers.role, answers.employees]);
+            console.log(`Updated ${answers.employee} to ${answers.role}`);
+            mainMenu();
+          }
+        );
+      };
+
 mainMenu();
