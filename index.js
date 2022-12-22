@@ -1,6 +1,6 @@
 const inquirer = require("inquirer");
 const mysql = require("mysql2");
-// require("console.table");
+require("console.table");
 require("dotenv").config();
 
 const db = mysql.createConnection(
@@ -187,11 +187,10 @@ const addEmployee = async () => {
 const updateRole = async () => {
   const [employees] = await db
   .promise()
-  .query("SELECT CONCAT(first_name, ' ', last_name) AS value, id AS name FROM employees");
+  .query("SELECT CONCAT(first_name, ' ', last_name) AS name, id AS value FROM employees");
   const [roles] = await db
     .promise()
     .query("SELECT title AS name, id AS value FROM roles");
-    
       const addRoleInput = [
         {
           type: "list",
@@ -212,7 +211,7 @@ const updateRole = async () => {
         .promise()
         .query(
           "UPDATE employees SET role_id = ? WHERE id = ?", [answers.role, answers.employees]);
-            console.log(`Updated ${answers.employee} to ${answers.role}`);
+            console.log(`Updated ${employees[answers.employee - 1].name} to ${roles[answers.role - 1].name}`);
             mainMenu();
           }
         );
