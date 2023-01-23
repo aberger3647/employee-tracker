@@ -7,10 +7,9 @@
  A CLI using Node.js, Inquirer and MySQL that allows the user to view and manage the departments, roles, and employees in a company.
   
 ## Table of Contents
+- [Preview](#preview)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Contributing](#contributing)
-- [Tests](#test)
+- [Screenshot](#screenshot)
 - [License](#license)
 - [Questions](#questions)
 
@@ -20,7 +19,8 @@ This [walkthrough video](https://drive.google.com/file/d/1stdl7lGgsUkzKZMC6NaiZ3
 ## Installation
 Install dependencies with `npm i`. Update the database password in the `.env` file. Create the database by starting MySQL with `mysql -u root -p` and running `SOURCE db/schema.sql;`. Seed the database by running `SOURCE db/seeds.sql;`. Run the application with `node index`.
 
-## Usage
+## Screenshot
+<img src="screenshot.png" width="600">
 
 ## License
 Learn more about [MIT](https://choosealicense.com/licenses/mit/).
